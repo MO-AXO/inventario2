@@ -1,4 +1,4 @@
-import { StrictMode, useState } from 'react'
+import { StrictMode, useEffect, useState } from 'react'
 import { createRoot } from 'react-dom/client'
 import './styles.css'
 
@@ -179,13 +179,33 @@ const defaultCategories = ['Entradas', 'Platos fuertes', 'Bebidas', 'Postres']
 
 function ProductsPage() {
   const [categories, setCategories] = useState(defaultCategories)
+  const [products, setProducts] = useState([])
   const [newCategory, setNewCategory] = useState('')
   const [showProductForm, setShowProductForm] = useState(false)
 
-  const addCategory = () => {
+  useEffect(() => {
+    Promise.all([fetch('/api/categories'), fetch('/api/products')]).then(async ([categoriesResponse, productsResponse]) => {
+      if (categoriesResponse.ok) {
+        const data = await categoriesResponse.json()
+        if (data.length) setCategories(data.map((category) => category.name))
+      }
+      if (productsResponse.ok) setProducts(await productsResponse.json())
+    }).catch(() => {})
+  }, [])
+
+  const addCategory = async () => {
     const category = newCategory.trim()
-    if (category && !categories.includes(category)) setCategories([...categories, category])
+    if (!category || categories.includes(category)) return setNewCategory('')
+    const response = await fetch('/api/categories', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ name: category }) })
+    if (response.ok) setCategories([...categories, category])
     setNewCategory('')
+  }
+
+  const saveProduct = async (product) => {
+    const response = await fetch('/api/products', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(product) })
+    if (!response.ok) return
+    setProducts([...products, await response.json()])
+    setShowProductForm(false)
   }
 
   return <div className="products-page">
@@ -193,25 +213,30 @@ function ProductsPage() {
     <section className="categories-panel">
       <h2>Categorías del menú</h2>
       <div className="categories-row">
-        {categories.map((category) => <span className="category-chip" key={category}>{category}<button aria-label={`Editar ${category}`}>🖉</button><button aria-label={`Eliminar ${category}`} onClick={() => setCategories(categories.filter((item) => item !== category))}>×</button></span>)}
+        {categories.map((category) => <span className="category-chip" key={category}>{category}<button aria-label={`Editar ${category}`}>🖉</button><button aria-label={`Eliminar ${category}`}>×</button></span>)}
         <input className="category-input" placeholder="Nueva categoría..." value={newCategory} onChange={(event) => setNewCategory(event.target.value)} onKeyDown={(event) => event.key === 'Enter' && addCategory()} />
         <button className="add-category-button" onClick={addCategory}>+ Agregar</button>
       </div>
     </section>
-    <section className="products-table"><div className="products-table-header"><span>PRODUCTO</span><span>CATEGORÍA</span><span>ESTACIÓN</span><span>PRECIO</span><span>ESTADO</span></div></section>
-    {showProductForm && <ProductForm categories={categories} onClose={() => setShowProductForm(false)} />}
+    <section className="products-table"><div className="products-table-header"><span>PRODUCTO</span><span>CATEGORÍA</span><span>ESTACIÓN</span><span>PRECIO</span><span>ESTADO</span></div>{products.map((product) => <div className="product-table-row" key={product.id}><span>{product.emoji} {product.name}</span><span>{product.category.name}</span><span>{product.station}</span><span>${Number(product.price).toFixed(2)}</span><span className="active-product">Activo</span></div>)}{!products.length && <p>Sin productos.</p>}</section>
+    {showProductForm && <ProductForm categories={categories} onSave={saveProduct} onClose={() => setShowProductForm(false)} />}
   </div>
 }
 
-function ProductForm({ categories, onClose }) {
+function ProductForm({ categories, onSave, onClose }) {
+  const submit = (event) => {
+    event.preventDefault()
+    const data = new FormData(event.currentTarget)
+    onSave({ name: data.get('name'), price: data.get('price'), emoji: data.get('emoji'), category: data.get('category'), station: data.get('station'), prepMinutes: data.get('prepMinutes') })
+  }
   return <div className="modal-backdrop" onMouseDown={(event) => event.target === event.currentTarget && onClose()}>
-    <form className="product-form" onSubmit={(event) => { event.preventDefault(); onClose() }}>
+    <form className="product-form" onSubmit={submit}>
       <h2>Nuevo producto</h2>
-      <label>Nombre<input autoFocus type="text" /></label>
+      <label>Nombre<input name="name" autoFocus required type="text" /></label>
       <label>Foto<div className="photo-upload-row"><div className="photo-preview">📷</div><div><button type="button" className="upload-button">Subir foto</button><small>Opcional · JPG, PNG o WEBP</small></div></div></label>
-      <div className="form-two-columns"><label>Precio<input type="text" /></label><label>Emoji<input type="text" defaultValue="🍔" /></label></div>
-      <div className="form-two-columns"><label>Categoría<select defaultValue=""><option value="">Seleccionar...</option>{categories.map((category) => <option key={category}>{category}</option>)}</select></label><label>Estación (cocina)<select defaultValue="Ninguna"><option>Ninguna</option><option>Cocina</option><option>Barra</option></select></label></div>
-      <div className="form-two-columns"><label>Tiempo estimado (min)<input type="number" defaultValue="15" /></label><label className="checkbox-label"><input type="checkbox" defaultChecked />Activo</label></div>
+      <div className="form-two-columns"><label>Precio<input name="price" type="number" step="0.01" defaultValue="0" /></label><label>Emoji<input name="emoji" type="text" defaultValue="🍔" /></label></div>
+      <div className="form-two-columns"><label>Categoría<select name="category" required defaultValue=""><option value="">Seleccionar...</option>{categories.map((category) => <option key={category}>{category}</option>)}</select></label><label>Estación (cocina)<select name="station" defaultValue="Ninguna"><option>Ninguna</option><option>Cocina</option><option>Barra</option></select></label></div>
+      <div className="form-two-columns"><label>Tiempo estimado (min)<input name="prepMinutes" type="number" defaultValue="15" /></label><label className="checkbox-label"><input type="checkbox" defaultChecked />Activo</label></div>
       <label className="checkbox-label store-sale"><input type="checkbox" />Venta tienda</label>
       <div className="form-actions"><button type="button" className="cancel-form-button" onClick={onClose}>Cancelar</button><button type="submit" className="save-form-button">Guardar</button></div>
     </form>
