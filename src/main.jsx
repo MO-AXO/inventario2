@@ -180,6 +180,49 @@ const restaurants = [
   { name: '🏭 kmInl', detail: 'Centro de producción · 0 usuario(s)' },
 ]
 
+const defaultCategories = ['Entradas', 'Platos fuertes', 'Bebidas', 'Postres']
+
+function ProductsPage() {
+  const [categories, setCategories] = useState(defaultCategories)
+  const [newCategory, setNewCategory] = useState('')
+  const [showProductForm, setShowProductForm] = useState(false)
+
+  const addCategory = () => {
+    const category = newCategory.trim()
+    if (category && !categories.includes(category)) setCategories([...categories, category])
+    setNewCategory('')
+  }
+
+  return <div className="products-page">
+    <div className="products-header"><h1>Productos</h1><button className="new-location-button" onClick={() => setShowProductForm(true)}>+ Nuevo producto</button></div>
+    <section className="categories-panel">
+      <h2>Categorías del menú</h2>
+      <div className="categories-row">
+        {categories.map((category) => <span className="category-chip" key={category}>{category}<button aria-label={`Editar ${category}`}>🖉</button><button aria-label={`Eliminar ${category}`} onClick={() => setCategories(categories.filter((item) => item !== category))}>×</button></span>)}
+        <input className="category-input" placeholder="Nueva categoría..." value={newCategory} onChange={(event) => setNewCategory(event.target.value)} onKeyDown={(event) => event.key === 'Enter' && addCategory()} />
+        <button className="add-category-button" onClick={addCategory}>+ Agregar</button>
+      </div>
+    </section>
+    <section className="products-table"><div className="products-table-header"><span>PRODUCTO</span><span>CATEGORÍA</span><span>ESTACIÓN</span><span>PRECIO</span><span>ESTADO</span></div></section>
+    {showProductForm && <ProductForm categories={categories} onClose={() => setShowProductForm(false)} />}
+  </div>
+}
+
+function ProductForm({ categories, onClose }) {
+  return <div className="modal-backdrop" onMouseDown={(event) => event.target === event.currentTarget && onClose()}>
+    <form className="product-form" onSubmit={(event) => { event.preventDefault(); onClose() }}>
+      <h2>Nuevo producto</h2>
+      <label>Nombre<input autoFocus type="text" /></label>
+      <label>Foto<div className="photo-upload-row"><div className="photo-preview">📷</div><div><button type="button" className="upload-button">Subir foto</button><small>Opcional · JPG, PNG o WEBP</small></div></div></label>
+      <div className="form-two-columns"><label>Precio<input type="text" /></label><label>Emoji<input type="text" defaultValue="🍔" /></label></div>
+      <div className="form-two-columns"><label>Categoría<select defaultValue=""><option value="">Seleccionar...</option>{categories.map((category) => <option key={category}>{category}</option>)}</select></label><label>Estación (cocina)<select defaultValue="Ninguna"><option>Ninguna</option><option>Cocina</option><option>Barra</option></select></label></div>
+      <div className="form-two-columns"><label>Tiempo estimado (min)<input type="number" defaultValue="15" /></label><label className="checkbox-label"><input type="checkbox" defaultChecked />Activo</label></div>
+      <label className="checkbox-label store-sale"><input type="checkbox" />Venta tienda</label>
+      <div className="form-actions"><button type="button" className="cancel-form-button" onClick={onClose}>Cancelar</button><button type="submit" className="save-form-button">Guardar</button></div>
+    </form>
+  </div>
+}
+
 function RestaurantsPage() {
   return <div className="restaurants-page">
     <div className="restaurants-header">
@@ -203,6 +246,7 @@ function App() {
       return activeReport === 'Ventas' ? <SalesReport activeTab={activeReport} onChange={changeReport} /> : <ProfitabilityReport activeTab={activeReport} onChange={changeReport} />
     }
     if (activeItem === 'Restaurantes') return <RestaurantsPage />
+    if (activeItem === 'Productos') return <ProductsPage />
     return <>
       <header className="page-header"><h1>{activeItem}</h1><p>Resumen de hoy · ayer $0.00 en 0 órdenes</p></header>
       <div className="stats-grid primary-grid">{primaryStats.map((stat) => <StatCard stat={stat} key={stat.label} />)}</div>
