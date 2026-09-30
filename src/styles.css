@@ -56,6 +56,26 @@ button { font: inherit; }
 @media (max-width: 760px) { .app-shell { display: block; } .sidebar { width: 100%; min-height: auto; padding: 14px; } .brand { height: 29px; } .navigation { display: grid; grid-template-columns: repeat(2, 1fr); margin-top: 8px; } .sidebar-footer { margin-top: 12px; } .main-content { padding: 18px 14px; } .page-header { padding-bottom: 18px; } .primary-grid, .secondary-grid, .bottom-grid { grid-template-columns: 1fr 1fr; gap: 11px; } .stat-card { min-height: 105px; padding: 16px 13px; } .trend-panel { height: 230px; padding: 18px 14px; } .empty-panel { min-height: 150px; padding: 18px 14px; } }
 @media (max-width: 450px) { .primary-grid, .secondary-grid, .bottom-grid { grid-template-columns: 1fr; } .navigation { grid-template-columns: 1fr 1fr; } .page-header h1 { font-size: 23px; } }
 
+/* Restaurants */
+.restaurants-page { min-height: 100vh; padding: 14px 0 32px; }
+.restaurants-header { display: flex; align-items: flex-start; justify-content: space-between; gap: 25px; }
+.restaurants-header h1 { margin: 0 0 11px; color: #162440; font-size: 27px; line-height: 1.1; letter-spacing: -.5px; }
+.restaurants-header p { max-width: 1020px; margin: 0; color: #718096; font-size: 15px; line-height: 1.45; }
+.restaurants-header p strong { color: #536178; }
+.new-location-button { flex: 0 0 auto; height: 38px; padding: 0 16px; border: 0; border-radius: 14px; background: #5ba5dc; color: white; cursor: pointer; font-size: 14px; font-weight: 700; }
+.new-location-button:hover { background: #438fc9; }
+.restaurants-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 431px)); gap: 12px; margin-top: 25px; }
+.restaurant-card { min-height: 122px; padding: 19px 16px 17px; border: 1px solid #edf0f4; border-radius: 17px; background: #fff; box-shadow: 0 1px 2px rgba(22, 37, 65, .03); }
+.restaurant-card-heading { display: flex; justify-content: space-between; gap: 12px; }
+.restaurant-card h2 { margin: 0 0 6px; color: #192741; font-size: 16px; line-height: 1.1; }
+.restaurant-card p { margin: 0; color: #a1aec1; font-size: 13px; }
+.status-badge { display: inline-flex; align-items: center; height: 20px; padding: 0 9px; border-radius: 12px; background: #dcf7e4; color: #4fbd72; font-size: 11px; font-weight: 700; }
+.restaurant-actions { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 13px; }
+.restaurant-actions button { height: 29px; border: 0; border-radius: 8px; cursor: pointer; font-size: 12px; font-weight: 700; }
+.rename-button { background: #f0f5fd; color: #5870e6; }
+.disable-button { background: #fff1f1; color: #dd6d68; }
+.rename-button:hover, .disable-button:hover { filter: brightness(.97); }
+
 /* Reports */
 .reports-page { min-height: 100vh; padding: 22px 0 32px; }
 .report-tabs { display: flex; gap: 7px; flex-wrap: wrap; margin: 0 0 28px; }

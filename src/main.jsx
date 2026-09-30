@@ -175,6 +175,24 @@ function SalesReport({ activeTab, onChange }) {
   </div>
 }
 
+const restaurants = [
+  { name: 'Restaurante Prueba', detail: '4 usuario(s) · 0 mesa(s)' },
+  { name: '🏭 kmInl', detail: 'Centro de producción · 0 usuario(s)' },
+]
+
+function RestaurantsPage() {
+  return <div className="restaurants-page">
+    <div className="restaurants-header">
+      <div><h1>Restaurantes</h1><p>Cada restaurante tiene sus propias mesas, cocina, bodega y caja. Tus meseros, cajeros y cocina eligen el restaurante al entrar. Si produces en un lugar aparte, crea un <strong>centro de producción</strong>: no vende, solo produce y abastece a tus restaurantes con sus pedidos. (Prueba: hasta 3 · Plan pagado: ilimitados)</p></div>
+      <button className="new-location-button">+ Nuevo local</button>
+    </div>
+    <div className="restaurants-grid">{restaurants.map((restaurant) => <article className="restaurant-card" key={restaurant.name}>
+      <div className="restaurant-card-heading"><div><h2>{restaurant.name}</h2><p>{restaurant.detail}</p></div><span className="status-badge">Activo</span></div>
+      <div className="restaurant-actions"><button className="rename-button">Renombrar</button><button className="disable-button">Desactivar</button></div>
+    </article>)}</div>
+  </div>
+}
+
 function App() {
   const [activeItem, setActiveItem] = useState('Dashboard')
   const [activeReport, setActiveReport] = useState('Rentabilidad')
@@ -184,6 +202,7 @@ function App() {
     if (activeItem === 'Reportes') {
       return activeReport === 'Ventas' ? <SalesReport activeTab={activeReport} onChange={changeReport} /> : <ProfitabilityReport activeTab={activeReport} onChange={changeReport} />
     }
+    if (activeItem === 'Restaurantes') return <RestaurantsPage />
     return <>
       <header className="page-header"><h1>{activeItem}</h1><p>Resumen de hoy · ayer $0.00 en 0 órdenes</p></header>
       <div className="stats-grid primary-grid">{primaryStats.map((stat) => <StatCard stat={stat} key={stat.label} />)}</div>
