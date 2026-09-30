@@ -7,6 +7,51 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
+enum Role {
+  OWNER
+  EMPLOYEE
+}
+
+enum Module {
+  CARNES_PREPARADAS
+  CARNES_AHUMADAS
+  CARNE_CRUDA
+  VERDURAS
+  BEBIDAS_BODEGA
+  BEBIDAS_SERVICIO
+  SALSAS
+  COCINA
+  SERVICIO
+  BODEGA
+  DESECHABLES
+  GUARNICIONES
+  VERDURAS_RESTAURANTE
+  HARINAS_ACEITE_RESTAURANTE
+  HARINAS_ACEITE_BODEGA
+  LACTEOS_RESTAURANTE
+  LACTEOS_BODEGA
+  CONDIMENTOS_RESTAURANTE
+  DESECHABLES_BOLSAS_RESTAURANTE
+  DESECHABLES_BODEGA
+  SALSAS_ADEREZOS_RESTAURANTE
+  LIMPIEZA_RESTAURANTE
+  SALSAS_ADEREZOS_BODEGA
+  CONDIMENTOS_BODEGA
+  MATERIA_PRIMA_SALSA
+  LIMPIEZA_BODEGA
+}
+
+enum StockStatus {
+  OK
+  BAJO
+  CRITICO
+}
+
+enum InventoryType {
+  RAW
+  FINISHED
+}
+
 model Category {
   id        String    @id @default(cuid())
   name      String    @unique
@@ -14,19 +59,34 @@ model Category {
   products  Product[]
 }
 
+model User {
+  id        String        @id @default(cuid())
+  name      String
+  pin       String
+  role      Role          @default(EMPLOYEE)
+  active    Boolean       @default(true)
+  createdAt DateTime      @default(now())
+  records   DailyRecord[]
+}
+
 model Product {
-  id          String       @id @default(cuid())
-  name        String
-  categoryId  String
-  category    Category     @relation(fields: [categoryId], references: [id])
-  station     String       @default("Ninguna")
-  price       Decimal      @default(0) @db.Decimal(12, 2)
-  emoji       String       @default("🍔")
-  prepMinutes Int          @default(15)
-  active      Boolean      @default(true)
-  createdAt   DateTime     @default(now())
-  updatedAt   DateTime     @updatedAt
-  inventory   InventoryItem?
+  id           String          @id @default(cuid())
+  name         String
+  categoryId   String
+  category     Category        @relation(fields: [categoryId], references: [id])
+  module       Module          @default(COCINA)
+  unit         String          @default("UNIDAD")
+  minStock     Decimal         @default(0) @db.Decimal(12, 3)
+  maxStock     Decimal?
+  price        Decimal         @default(0) @db.Decimal(12, 2)
+  station      String          @default("Ninguna")
+  emoji        String          @default("🍔")
+  prepMinutes  Int             @default(15)
+  active       Boolean         @default(true)
+  createdAt    DateTime        @default(now())
+  updatedAt    DateTime        @updatedAt
+  records      DailyRecord[]
+  inventory    InventoryItem?
 }
 
 model InventoryItem {
@@ -42,13 +102,8 @@ model InventoryItem {
   productId    String?            @unique
   product      Product?           @relation(fields: [productId], references: [id])
   movements    InventoryMovement[]
-  createdAt    DateTime           @default(now())
-  updatedAt    DateTime           @updatedAt
-}
-
-enum InventoryType {
-  RAW
-  FINISHED
+  createdAt    DateTime            @default(now())
+  updatedAt    DateTime            @updatedAt
 }
 
 model InventoryMovement {
@@ -58,4 +113,67 @@ model InventoryMovement {
   quantity  Decimal       @db.Decimal(12, 3)
   reason    String
   createdAt DateTime      @default(now())
+}
+
+model DailyRecord {
+  id            String      @id @default(cuid())
+  productId     String
+  product       Product     @relation(fields: [productId], references: [id])
+  date          DateTime    @db.Date
+  currentStock  Float?
+  initialWeight Float?
+  restock       Float?
+  waste1        Float?
+  waste2        Float?
+  finalWeight   Float?
+  units         Int?
+  weightLb      Float?
+  initialStock  Float?
+  finalStock    Float?
+  consumption   Float?
+  status        StockStatus @default(OK)
+  notes         String?
+  userId        String?
+  user          User?       @relation(fields: [userId], references: [id])
+  createdAt     DateTime    @default(now())
+  updatedAt     DateTime    @updatedAt
+
+  @@unique([productId, date])
+}
+
+model Alert {
+  id          String      @id @default(cuid())
+  productId   String
+  productName String
+  module      Module
+  status      StockStatus
+  message     String
+  read        Boolean     @default(false)
+  createdAt   DateTime    @default(now())
+}
+
+model DayClose {
+  id           String   @id @default(cuid())
+  date         DateTime @unique @db.Date
+  closedAt     DateTime @default(now())
+  closedByName String
+}
+
+model DayConsumptionSnapshot {
+  id              String   @id @default(cuid())
+  date            DateTime @db.Date
+  productId       String
+  productName     String
+  module          Module
+  unit            String
+  consumption     Float
+  consumoMedioDia Float?
+  consumoNoche    Float?
+  initial         Float?
+  mid             Float?
+  restock         Float?
+  final           Float?
+  createdAt       DateTime @default(now())
+
+  @@unique([productId, date])
 }

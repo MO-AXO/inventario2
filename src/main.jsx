@@ -245,25 +245,33 @@ function ProductForm({ categories, onSave, onClose }) {
 
 function InventoryPage() {
   const [filter, setFilter] = useState('Todos')
+  const [items, setItems] = useState([])
   const [showForm, setShowForm] = useState(false)
+  useEffect(() => { fetch('/api/inventory').then((response) => response.ok ? response.json() : []).then(setItems).catch(() => {}) }, [])
+  const visibleItems = items.filter((item) => filter === 'Todos' || (filter === 'Materia prima' ? item.type === 'RAW' : item.type === 'FINISHED'))
+  const saveItem = async (item) => {
+    const response = await fetch('/api/inventory', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(item) })
+    if (response.ok) { setItems([...items, await response.json()]); setShowForm(false) }
+  }
   return <div className="inventory-page">
     <div className="inventory-header"><h1>Inventario</h1><button className="new-location-button" onClick={() => setShowForm(true)}>+ Nuevo insumo</button></div>
     <div className="inventory-toolbar"><div className="inventory-tabs">{['Todos', 'Materia prima', 'Elaborados'].map((tab) => <button key={tab} className={filter === tab ? 'active' : ''} onClick={() => setFilter(tab)}>{tab}</button>)}</div><select className="warehouse-select" defaultValue="Restaurante Prueba"><option>Existencias: Restaurante Prueba</option><option>Existencias: kmInl</option></select></div>
-    <section className="inventory-table"><div className="inventory-table-header"><span>INSUMO</span><span>UNIDAD</span><span>DISPONIBLE</span><span>RESERVADO</span><span>MÍNIMO</span><span>COSTO UNIT.</span><span>PRÓX. VENCE</span></div><p>Sin insumos.</p></section>
-    {showForm && <InventoryForm onClose={() => setShowForm(false)} />}
+    <section className="inventory-table"><div className="inventory-table-header"><span>INSUMO</span><span>UNIDAD</span><span>DISPONIBLE</span><span>RESERVADO</span><span>MÍNIMO</span><span>COSTO UNIT.</span><span>PRÓX. VENCE</span></div>{visibleItems.map((item) => <div className="inventory-table-row" key={item.id}><span>{item.name}</span><span>{item.unit}</span><span>{Number(item.currentStock)}</span><span>0</span><span>{Number(item.minStock)}</span><span>${Number(item.cost).toFixed(2)}</span><span>{item.expiresAt ? new Date(item.expiresAt).toLocaleDateString() : '—'}</span></div>)}{!visibleItems.length && <p>Sin insumos.</p>}</section>
+    {showForm && <InventoryForm onSave={saveItem} onClose={() => setShowForm(false)} />}
   </div>
 }
 
-function InventoryForm({ onClose }) {
-  const [type, setType] = useState('Elaborado')
+function InventoryForm({ onSave, onClose }) {
+  const [type, setType] = useState('FINISHED')
+  const submit = (event) => { event.preventDefault(); const data = new FormData(event.currentTarget); onSave({ name: data.get('name'), type, unit: data.get('unit'), minStock: data.get('minStock'), perishable: data.get('perishable') === 'on' }) }
   return <div className="modal-backdrop" onMouseDown={(event) => event.target === event.currentTarget && onClose()}>
-    <form className="inventory-form" onSubmit={(event) => { event.preventDefault(); onClose() }}>
+    <form className="inventory-form" onSubmit={submit}>
       <h2>Nuevo insumo</h2>
-      <div className="inventory-type-selector"><button type="button" className={type === 'Materia prima' ? 'active' : ''} onClick={() => setType('Materia prima')}><strong>Materia prima</strong><small>Se compra</small></button><button type="button" className={type === 'Elaborado' ? 'active' : ''} onClick={() => setType('Elaborado')}><strong>Elaborado</strong><small>Se produce con una fórmula</small></button></div>
-      <label>Nombre<input autoFocus type="text" /></label>
+      <div className="inventory-type-selector"><button type="button" className={type === 'RAW' ? 'active' : ''} onClick={() => setType('RAW')}><strong>Materia prima</strong><small>Se compra</small></button><button type="button" className={type === 'FINISHED' ? 'active' : ''} onClick={() => setType('FINISHED')}><strong>Elaborado</strong><small>Se produce con una fórmula</small></button></div>
+      <label>Nombre<input name="name" autoFocus required type="text" /></label>
       <label>Foto<div className="photo-upload-row"><div className="photo-preview">📷</div><div><button type="button" className="upload-button">Subir foto</button><small>Opcional · JPG, PNG o WEBP</small></div></div></label>
-      <div className="form-two-columns"><label>Unidad<select defaultValue="UNIDAD"><option>UNIDAD</option><option>KG</option><option>LITRO</option></select></label><label>Stock mínimo<input type="number" defaultValue="0" /></label></div>
-      <label className="checkbox-label store-sale"><input type="checkbox" />Perecedero (controla vencimiento)</label>
+      <div className="form-two-columns"><label>Unidad<select name="unit" defaultValue="UNIDAD"><option>UNIDAD</option><option>KG</option><option>LITRO</option></select></label><label>Stock mínimo<input name="minStock" type="number" defaultValue="0" /></label></div>
+      <label className="checkbox-label store-sale"><input name="perishable" type="checkbox" />Perecedero (controla vencimiento)</label>
       <div className="form-actions"><button type="button" className="cancel-form-button" onClick={onClose}>Cancelar</button><button type="submit" className="save-form-button">Guardar</button></div>
     </form>
   </div>

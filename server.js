@@ -57,6 +57,14 @@ app.post('/api/products', async (req, res) => {
       price: Number(body.price || 0),
       emoji: String(body.emoji || '🍔'),
       prepMinutes: Number(body.prepMinutes || 15),
+      inventory: {
+        create: {
+          name,
+          type: 'RAW',
+          unit: String(body.unit || 'UNIDAD'),
+          minStock: Number(body.minStock || 0),
+        },
+      },
     },
     include: { category: true, inventory: true },
   })
