@@ -249,6 +249,31 @@ function InventoryForm({ onClose }) {
   </div>
 }
 
+const warehouses = [
+  { name: '🏬 Bodega Principal', detail: 'Almacén secundario' },
+  { name: '🏬 mario', detail: 'Consume el POS', main: true },
+]
+
+function WarehousesPage() {
+  const [showForm, setShowForm] = useState(false)
+  return <div className="warehouses-page">
+    <div className="warehouses-header"><h1>Bodegas</h1><button className="new-location-button" onClick={() => setShowForm(true)}>+ Nueva bodega</button></div>
+    <div className="warehouses-grid">{warehouses.map((warehouse) => <article className="warehouse-card" key={warehouse.name}><div className="warehouse-card-heading"><div><h2>{warehouse.name}</h2><p>{warehouse.detail}</p></div>{warehouse.main && <span className="main-badge">Principal</span>}</div><div className="warehouse-actions"><button>Editar</button><button>Eliminar</button></div></article>)}</div>
+    {showForm && <WarehouseForm onClose={() => setShowForm(false)} />}
+  </div>
+}
+
+function WarehouseForm({ onClose }) {
+  return <div className="modal-backdrop" onMouseDown={(event) => event.target === event.currentTarget && onClose()}>
+    <form className="warehouse-form" onSubmit={(event) => { event.preventDefault(); onClose() }}>
+      <h2>Nueva bodega</h2>
+      <label>Nombre<input autoFocus type="text" /></label>
+      <label className="checkbox-label warehouse-main-check"><input type="checkbox" />Bodega principal (la que descuenta el POS)</label>
+      <div className="form-actions"><button type="button" className="cancel-form-button" onClick={onClose}>Cancelar</button><button type="submit" className="save-form-button">Guardar</button></div>
+    </form>
+  </div>
+}
+
 function RestaurantsPage() {
   return <div className="restaurants-page">
     <div className="restaurants-header">
@@ -274,6 +299,7 @@ function App() {
     if (activeItem === 'Restaurantes') return <RestaurantsPage />
     if (activeItem === 'Productos') return <ProductsPage />
     if (activeItem === 'Inventario') return <InventoryPage />
+    if (activeItem === 'Bodegas') return <WarehousesPage />
     return <>
       <header className="page-header"><h1>{activeItem}</h1><p>Resumen de hoy · ayer $0.00 en 0 órdenes</p></header>
       <div className="stats-grid primary-grid">{primaryStats.map((stat) => <StatCard stat={stat} key={stat.label} />)}</div>
