@@ -11,7 +11,7 @@ const navigation = [
   { label: 'Inventario', icon: '▣' },
   { label: 'Bodegas', icon: '⌂' },
   { label: 'Pedidos al centro', icon: '▱' },
-
+  { label: 'Importar ventas', icon: '📊' },
 ]
 
 const primaryStats = [
@@ -305,6 +305,21 @@ function RestaurantsPage() {
   </div>
 }
 
+function ImportSalesPage() {
+  const [fileName, setFileName] = useState('')
+  return <div className="import-sales-page">
+    <div className="import-sales-header"><div><h1>Importar ventas</h1><p>Carga el Excel exportado desde Lexa para analizar tus ventas.</p></div></div>
+    <section className="import-sales-card">
+      <div className="import-icon">📊</div>
+      <h2>Importa tu archivo de ventas</h2>
+      <p>Selecciona un archivo Excel o CSV de Lexa. El análisis estará disponible después de validar sus columnas.</p>
+      <label className="file-picker-button">{fileName ? 'Cambiar archivo' : 'Seleccionar archivo'}<input type="file" accept=".xlsx,.xls,.csv" onChange={(event) => setFileName(event.target.files?.[0]?.name || '')} /></label>
+      {fileName && <div className="selected-file">✓ {fileName}</div>}
+      <span className="file-help">Formatos aceptados: .xlsx, .xls y .csv</span>
+    </section>
+  </div>
+}
+
 function App() {
   const [activeItem, setActiveItem] = useState('Dashboard')
   const [activeReport, setActiveReport] = useState('Rentabilidad')
@@ -319,6 +334,7 @@ function App() {
     if (activeItem === 'Inventario') return <InventoryPage />
     if (activeItem === 'Bodegas') return <WarehousesPage />
     if (activeItem === 'Pedidos al centro') return <OrdersPage />
+    if (activeItem === 'Importar ventas') return <ImportSalesPage />
     return <>
       <header className="page-header"><h1>{activeItem}</h1><p>Resumen de hoy · ayer $0.00 en 0 órdenes</p></header>
       <div className="stats-grid primary-grid">{primaryStats.map((stat) => <StatCard stat={stat} key={stat.label} />)}</div>
