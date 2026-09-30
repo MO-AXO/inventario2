@@ -353,9 +353,36 @@ function ImportSalesPage() {
   </div>
 }
 
+function LoginScreen({ onAuthenticated }) {
+  const [setup, setSetup] = useState(false)
+  const [name, setName] = useState('')
+  const [pin, setPin] = useState('')
+  const [error, setError] = useState('')
+  const [busy, setBusy] = useState(false)
+  const submit = async (event) => {
+    event.preventDefault()
+    setBusy(true); setError('')
+    const endpoint = setup ? '/api/auth/bootstrap' : '/api/auth/login'
+    const response = await fetch(endpoint, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ name, pin }) })
+    const data = await response.json().catch(() => ({}))
+    setBusy(false)
+    if (!response.ok) return setError(data.error || 'No se pudo iniciar sesión.')
+    onAuthenticated(data)
+  }
+  return <div className="login-page"><form className="login-card" onSubmit={submit}><div className="login-brand"><strong>we<span>POS</span></strong><small>Admin</small></div><h1>{setup ? 'Configura tu negocio' : 'Inicia sesión'}</h1><p>{setup ? 'Crea el administrador inicial para comenzar.' : 'Accede al sistema de tu restaurante.'}</p><label>Usuario<input value={name} onChange={(event) => setName(event.target.value)} required /></label><label>PIN<input type="password" inputMode="numeric" value={pin} onChange={(event) => setPin(event.target.value)} required /></label>{error && <div className="login-error">{error}</div>}<button className="login-button" disabled={busy}>{busy ? 'Cargando...' : setup ? 'Crear administrador' : 'Ingresar'}</button><button type="button" className="login-switch" onClick={() => { setSetup(!setup); setError('') }}>{setup ? 'Ya tengo un usuario' : 'Configurar primer administrador'}</button></form></div>
+}
+
 function App() {
+  const [authState, setAuthState] = useState({ loading: true, user: null })
   const [activeItem, setActiveItem] = useState('Dashboard')
   const [activeReport, setActiveReport] = useState('Rentabilidad')
+
+  useEffect(() => {
+    fetch('/api/auth/me').then((response) => response.ok ? response.json() : null).then((user) => setAuthState({ loading: false, user })).catch(() => setAuthState({ loading: false, user: null }))
+  }, [])
+
+  if (authState.loading) return <div className="auth-loading">Cargando inventario...</div>
+  if (!authState.user) return <LoginScreen onAuthenticated={(user) => setAuthState({ loading: false, user })} />
 
   const changeReport = (tab) => setActiveReport(tab)
   const renderContent = () => {

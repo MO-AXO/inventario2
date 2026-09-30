@@ -13,8 +13,10 @@
   },
   "dependencies": {
     "@prisma/client": "^6.19.3",
+    "bcryptjs": "^3.0.3",
     "@vitejs/plugin-react": "latest",
     "express": "^5.1.0",
+    "jose": "^6.1.0",
     "prisma": "^6.19.3",
     "vite": "latest",
     "react": "latest",
