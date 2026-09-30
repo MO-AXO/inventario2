@@ -11,11 +11,7 @@ const navigation = [
   { label: 'Inventario', icon: '▣' },
   { label: 'Bodegas', icon: '⌂' },
   { label: 'Pedidos al centro', icon: '▱' },
-  { label: 'Gift cards', icon: '▧' },
-  { label: 'Usuarios', icon: '♙' },
-  { label: 'Empleados', icon: '♟' },
-  { label: 'WeOne', icon: '◉' },
-  { label: 'Mesas', icon: '▦' },
+
 ]
 
 const primaryStats = [
@@ -104,7 +100,6 @@ const reportTabs = [
   { label: 'Fiscal y clientes', icon: '🏛' },
   { label: 'Kárdex', icon: '📒' },
   { label: 'Valorización', icon: '📦' },
-  { label: 'Empleados', icon: '♟' },
 ]
 
 const profitabilityCards = [
