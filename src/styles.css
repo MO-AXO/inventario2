@@ -152,6 +152,26 @@ button { font: inherit; }
 .warehouse-main-check { margin-top: 17px; }
 .warehouse-form .form-actions { margin-top: 28px; }
 
+/* Orders */
+.orders-page { min-height: 100vh; padding: 22px 0 32px; }
+.orders-header { display: flex; justify-content: space-between; align-items: flex-start; gap: 24px; margin: 0 0 26px; }
+.orders-header h1 { margin: 0 0 15px; color: #13223e; font-size: 28px; letter-spacing: -.5px; }
+.orders-header p { max-width: 1040px; margin: 0; color: #728197; font-size: 16px; line-height: 1.4; }
+.orders-empty { display: grid; min-height: 102px; place-items: center; border: 1px solid #edf0f4; border-radius: 18px; background: #fff; color: #a1aec1; font-size: 16px; box-shadow: 0 1px 2px rgba(22, 37, 65, .03); }
+.order-form { width: min(560px, calc(100vw - 28px)); padding: 9px 9px 24px; border-radius: 0 0 17px 17px; background: #fff; box-shadow: 0 18px 55px rgba(12, 26, 54, .22); }
+.order-form h2 { margin: 0 0 27px; color: #15243f; font-size: 22px; }
+.order-form > label { display: block; margin: 0 0 9px; color: #44546b; font-size: 15px; font-weight: 600; }
+.order-meta { gap: 16px; }
+.order-meta label { margin-bottom: 14px; }
+.order-form input, .order-form select { height: 50px; border: 2px solid #e0e7f0; border-radius: 12px; outline: none; background: #fff; color: #22334f; font: inherit; font-size: 16px; }
+.order-form input:focus, .order-form select:focus { border-color: #74aee0; }
+.order-product-row { display: grid; grid-template-columns: 1fr 120px 32px; gap: 10px; align-items: center; margin-bottom: 12px; }
+.order-product-row select, .order-product-row input { width: 100%; padding: 0 16px; }
+.order-product-row button { padding: 0; border: 0; background: transparent; color: #e75754; cursor: pointer; font-size: 30px; line-height: 1; }
+.add-product-link { padding: 0; border: 0; background: transparent; color: #5b9fd4; cursor: pointer; font-size: 16px; font-weight: 700; }
+.order-form .form-actions { margin-top: 29px; }
+@media (max-width: 760px) { .orders-header { flex-direction: column; } .order-product-row { grid-template-columns: 1fr 85px 26px; } }
+
 /* Reports */
 .reports-page { min-height: 100vh; padding: 22px 0 32px; }
 .report-tabs { display: flex; gap: 7px; flex-wrap: wrap; margin: 0 0 28px; }

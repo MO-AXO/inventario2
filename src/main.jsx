@@ -274,6 +274,29 @@ function WarehouseForm({ onClose }) {
   </div>
 }
 
+function OrdersPage() {
+  const [showForm, setShowForm] = useState(false)
+  return <div className="orders-page">
+    <div className="orders-header"><div><h1>Pedidos al centro</h1><p>Pide al centro de producción los elaborados e insumos que necesitas. Cuando lleguen, confirma lo recibido y entran a la bodega del restaurante con su costo.</p></div><button className="new-location-button" onClick={() => setShowForm(true)}>+ Nuevo pedido</button></div>
+    <section className="orders-empty">Aún no hay pedidos de este restaurante.</section>
+    {showForm && <OrderForm onClose={() => setShowForm(false)} />}
+  </div>
+}
+
+function OrderForm({ onClose }) {
+  const [products, setProducts] = useState([0])
+  return <div className="modal-backdrop" onMouseDown={(event) => event.target === event.currentTarget && onClose()}>
+    <form className="order-form" onSubmit={(event) => { event.preventDefault(); onClose() }}>
+      <h2>Nuevo pedido al centro</h2>
+      <div className="form-two-columns order-meta"><label>Lo necesito para (opcional)<input type="date" /></label><label>Nota (opcional)<input placeholder="Ej. fin de semana largo" /></label></div>
+      <label>Productos</label>
+      {products.map((product, index) => <div className="order-product-row" key={product}><select defaultValue=""><option value="">Elegir...</option><option>Insumo elaborado</option><option>Producto de cocina</option></select><input type="number" defaultValue="1" min="1" /><button type="button" onClick={() => setProducts(products.filter((_, itemIndex) => itemIndex !== index))}>×</button></div>)}
+      <button type="button" className="add-product-link" onClick={() => setProducts([...products, products.length])}>+ Agregar producto</button>
+      <div className="form-actions"><button type="button" className="cancel-form-button" onClick={onClose}>Cancelar</button><button type="submit" className="save-form-button">Enviar pedido</button></div>
+    </form>
+  </div>
+}
+
 function RestaurantsPage() {
   return <div className="restaurants-page">
     <div className="restaurants-header">
@@ -300,6 +323,7 @@ function App() {
     if (activeItem === 'Productos') return <ProductsPage />
     if (activeItem === 'Inventario') return <InventoryPage />
     if (activeItem === 'Bodegas') return <WarehousesPage />
+    if (activeItem === 'Pedidos al centro') return <OrdersPage />
     return <>
       <header className="page-header"><h1>{activeItem}</h1><p>Resumen de hoy · ayer $0.00 en 0 órdenes</p></header>
       <div className="stats-grid primary-grid">{primaryStats.map((stat) => <StatCard stat={stat} key={stat.label} />)}</div>
