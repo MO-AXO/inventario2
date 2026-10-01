@@ -202,6 +202,40 @@ app.post('/api/inventory/:id/movements', requireUser(async (req, res) => {
   res.json(item)
 }))
 
+app.get('/api/recipes', requireUser(async (_req, res) => {
+  const recipes = await prisma.recipe.findMany({ include: { outputItem: true, ingredients: { include: { item: true } }, productions: { orderBy: { producedAt: 'desc' }, take: 5 } }, orderBy: { name: 'asc' } })
+  res.json(recipes)
+}))
+
+app.post('/api/recipes', requireOwner(async (req, res) => {
+  const name = String(req.body?.name || '').trim()
+  const outputItemId = String(req.body?.outputItemId || '')
+  const yieldQuantity = Number(req.body?.yieldQuantity)
+  const yieldUnit = String(req.body?.yieldUnit || 'UNIDAD')
+  const ingredients = Array.isArray(req.body?.ingredients) ? req.body.ingredients : []
+  if (!name || !outputItemId || !Number.isFinite(yieldQuantity) || yieldQuantity <= 0 || !ingredients.length) return res.status(400).json({ error: 'Nombre, elaborado, rendimiento e ingredientes son obligatorios.' })
+  const recipe = await prisma.recipe.create({ data: { name, outputItemId, yieldQuantity, yieldUnit, ingredients: { create: ingredients.map((ingredient) => ({ itemId: String(ingredient.itemId), quantity: Number(ingredient.quantity) })) } }, include: { outputItem: true, ingredients: { include: { item: true } } } })
+  res.status(201).json(recipe)
+}))
+
+app.post('/api/recipes/:id/produce', requireUser(async (req, res) => {
+  const quantity = Number(req.body?.quantity)
+  if (!Number.isFinite(quantity) || quantity <= 0) return res.status(400).json({ error: 'La cantidad a producir debe ser mayor que cero.' })
+  const recipe = await prisma.recipe.findUnique({ where: { id: req.params.id }, include: { ingredients: { include: { item: true } }, outputItem: true } })
+  if (!recipe) return res.status(404).json({ error: 'Fórmula no encontrada.' })
+  const factor = quantity / Number(recipe.yieldQuantity)
+  const required = recipe.ingredients.map((ingredient) => ({ ...ingredient, amount: Number(ingredient.quantity) * factor }))
+  const missing = required.find((ingredient) => Number(ingredient.item.currentStock) < ingredient.amount)
+  if (missing) return res.status(409).json({ error: `Stock insuficiente para ${missing.itemId}.` })
+  const totalCost = required.reduce((sum, ingredient) => sum + ingredient.amount * Number(ingredient.item.cost), 0)
+  const result = await prisma.$transaction(async (transaction) => {
+    for (const ingredient of required) await transaction.inventoryItem.update({ where: { id: ingredient.itemId }, data: { currentStock: { decrement: ingredient.amount }, movements: { create: { quantity: -ingredient.amount, reason: `Producción: ${recipe.name}` } } } })
+    await transaction.inventoryItem.update({ where: { id: recipe.outputItemId }, data: { currentStock: { increment: quantity }, movements: { create: { quantity, reason: `Producción: ${recipe.name}` } } } })
+    return transaction.productionBatch.create({ data: { recipeId: recipe.id, quantity, unitCost: totalCost / quantity } })
+  })
+  res.status(201).json(result)
+}))
+
 app.use(express.static(path.join(__dirname, 'dist')))
 app.use((req, res, next) => {
   if (req.method === 'GET' && !req.path.startsWith('/api/')) return res.sendFile(path.join(__dirname, 'dist', 'index.html'))

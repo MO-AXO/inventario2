@@ -9,6 +9,7 @@ const navigation = [
   { label: 'Restaurantes', icon: '♜' },
   { label: 'Productos', icon: '▤' },
   { label: 'Inventario', icon: '▣' },
+  { label: 'Producción', icon: '🏭' },
   { label: 'Bodegas', icon: '⌂' },
   { label: 'Pedidos al centro', icon: '▱' },
   { label: 'Importar ventas', icon: '📊' },
@@ -338,6 +339,22 @@ function RestaurantsPage() {
   </div>
 }
 
+function ProductionPage() {
+  const [items, setItems] = useState([])
+  const [recipes, setRecipes] = useState([])
+  const [showForm, setShowForm] = useState(false)
+  const [quantity, setQuantity] = useState({})
+  const load = () => Promise.all([fetch('/api/inventory'), fetch('/api/recipes')]).then(async ([itemsResponse, recipesResponse]) => { if (itemsResponse.ok) setItems(await itemsResponse.json()); if (recipesResponse.ok) setRecipes(await recipesResponse.json()) }).catch(() => {})
+  useEffect(load, [])
+  const produce = async (recipe) => { const response = await fetch(`/api/recipes/${recipe.id}/produce`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ quantity: Number(quantity[recipe.id] || recipe.yieldQuantity) }) }); if (response.ok) { setQuantity({ ...quantity, [recipe.id]: '' }); load() } }
+  return <div className="production-page"><div className="production-header"><div><h1>Producción</h1><p>Elaborados y pedidos de los restaurantes</p></div><button className="new-location-button" onClick={() => setShowForm(true)}>+ Nueva fórmula</button></div><div className="production-grid">{recipes.map((recipe) => <article className="production-card" key={recipe.id}><div className="production-card-heading"><div><h2>🏭 {recipe.name}</h2><p>Rendimiento: {Number(recipe.yieldQuantity)} {recipe.yieldUnit}</p></div><span className="main-badge">Fórmula</span></div><div className="recipe-ingredients">{recipe.ingredients.map((ingredient) => <span key={ingredient.id}>{ingredient.item.name}: {Number(ingredient.quantity)}</span>)}</div><div className="produce-actions"><input type="number" min="0.001" placeholder={String(recipe.yieldQuantity)} value={quantity[recipe.id] || ''} onChange={(event) => setQuantity({ ...quantity, [recipe.id]: event.target.value })} /><button onClick={() => produce(recipe)}>Producir</button></div></article>)}</div>{!recipes.length && <section className="production-empty">Aún no hay fórmulas de producción.</section>}{showForm && <RecipeForm items={items} onSave={() => { setShowForm(false); load() }} onClose={() => setShowForm(false)} />}</div>
+}
+
+function RecipeForm({ items, onSave, onClose }) {
+  const submit = async (event) => { event.preventDefault(); const data = new FormData(event.currentTarget); const response = await fetch('/api/recipes', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ name: data.get('name'), outputItemId: data.get('outputItemId'), yieldQuantity: data.get('yieldQuantity'), yieldUnit: data.get('yieldUnit'), ingredients: [{ itemId: data.get('ingredientId'), quantity: data.get('ingredientQuantity') }] }) }); if (response.ok) onSave() }
+  return <div className="modal-backdrop"><form className="recipe-form" onSubmit={submit}><h2>Nueva fórmula</h2><label>Nombre del elaborado<input name="name" required /></label><label>Elaborado de salida<select name="outputItemId" required><option value="">Seleccionar...</option>{items.map((item) => <option key={item.id} value={item.id}>{item.name}</option>)}</select></label><div className="form-two-columns"><label>Rendimiento<input name="yieldQuantity" type="number" min="0.001" step="0.001" required /></label><label>Unidad<input name="yieldUnit" defaultValue="UNIDAD" required /></label></div><label>Materia prima<select name="ingredientId" required><option value="">Seleccionar...</option>{items.map((item) => <option key={item.id} value={item.id}>{item.name}</option>)}</select></label><label>Cantidad utilizada<input name="ingredientQuantity" type="number" min="0.001" step="0.001" required /></label><div className="form-actions"><button type="button" className="cancel-form-button" onClick={onClose}>Cancelar</button><button className="save-form-button">Guardar</button></div></form></div>
+}
+
 function ImportSalesPage() {
   const [fileName, setFileName] = useState('')
   return <div className="import-sales-page">
@@ -392,6 +409,7 @@ function App() {
     if (activeItem === 'Restaurantes') return <RestaurantsPage />
     if (activeItem === 'Productos') return <ProductsPage />
     if (activeItem === 'Inventario') return <InventoryPage />
+    if (activeItem === 'Producción') return <ProductionPage />
     if (activeItem === 'Bodegas') return <WarehousesPage />
     if (activeItem === 'Pedidos al centro') return <OrdersPage />
     if (activeItem === 'Importar ventas') return <ImportSalesPage />
